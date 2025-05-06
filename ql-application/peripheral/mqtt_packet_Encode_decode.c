@@ -257,7 +257,45 @@ int jsonextract(char *data)
 			write_config_fileUFS();
 			i++;
 		}
+		if (jsoneq(data, &t[i], "loc") == 0)        //this value to be loaded in ufs along with password and periodic interval           
+		{
+			sprintf(vv,"%.*s", t[i + 1].end - t[i + 1].start,data + t[i + 1].start);
+			
+			QL_MQTT_LOG("Gps Locaion set from rpc is:%s \n",vv); 
+			snl_conf_read.LiveLocation = atoi(vv);
+			if(snl_conf_read.LiveLocation == 1)
+			{
+				strcpy(snl_conf_read.Latitude,gnnsPosDat.lat);
+				strcpy(snl_conf_read.Longitude,gnnsPosDat.lon);
+				QL_MQTT_LOG("lat  set from rpc is:%s\n",snl_conf_read.Latitude);
+				QL_MQTT_LOG("long set from rpc is:%s \n",snl_conf_read.Longitude);
+			}
 
+			write_config_fileUFS();
+			i++;
+		}
+
+		if (jsoneq(data, &t[i], "tsync") == 0)        //this value to be loaded in ufs along with password and periodic interval           
+		{
+			sprintf(vv,"%.*s", t[i + 1].end - t[i + 1].start,data + t[i + 1].start);
+			
+			QL_MQTT_LOG("Time sync set from rpc is:%s \n",vv); 
+			snl_conf_read.LookupTimeSync = atoi(vv);
+			if(snl_conf_read.LiveLocation == 1)
+			{
+				snl_conf_read.DayIndex = tm.tm_mday;
+				snl_conf_read.MonthIndex = tm.tm_mon;
+				snl_conf_read.YearIndex = tm.tm_year;	
+				
+	
+				QL_MQTT_LOG("Day is set as:%d\n",snl_conf_read.DayIndex);
+				QL_MQTT_LOG("Month is set as:%d\n",snl_conf_read.MonthIndex);
+				QL_MQTT_LOG("Year is set as:%d\n",snl_conf_read.YearIndex);
+			}
+
+			write_config_fileUFS();
+			i++;
+		}
 		if (jsoneq(data, &t[i], "password") == 0)        //this value to be loaded in ufs along with password and periodic interval           
 		{
 			sprintf(vv,"%.*s", t[i + 1].end - t[i + 1].start,data + t[i + 1].start);

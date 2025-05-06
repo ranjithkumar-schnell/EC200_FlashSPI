@@ -61,7 +61,6 @@ uint8_t calculate_crc8(const char *data, size_t length)
     for (size_t i = 0; i < length; i++) 
     {
         crc ^= (uint8_t)data[i];
-        QL_MQTT_LOG("data[%d]: %d\n", i, (uint8_t)data[i]);
         for (int j = 0; j < 8; j++) 
         {
             crc = (uint8_t)((crc & 0x80) ? ((crc << 1) ^ polynomial) : (crc << 1));
@@ -311,6 +310,13 @@ void read_config_fileUFS()
     QL_MQTT_LOG("read pub snl_conf_read.interval is %d", snl_conf_read.interval);
 	QL_MQTT_LOG("read pub snl_conf_read.password is %s", snl_conf_read.password);
     QL_MQTT_LOG("read pub snl_conf_read.operator is %s", snl_conf_read.operator);
+    QL_MQTT_LOG("read pub snl_conf_read.LiveLocation is %d", snl_conf_read.LiveLocation);
+    QL_MQTT_LOG("read pub snl_conf_read.Latitude is %s", snl_conf_read.Latitude);
+    QL_MQTT_LOG("read pub snl_conf_read.Longitude is %s", snl_conf_read.Longitude);
+    QL_MQTT_LOG("read pub snl_conf_read.DayIndex is %d", snl_conf_read.DayIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.MonthIndex is %d", snl_conf_read.MonthIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.YearIndex is %d", snl_conf_read.YearIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.LookupTimeSync is %d", snl_conf_read.LookupTimeSync);
 	strcpy(mq_client_pwd,snl_conf_read.password);
     strcpy(mq_url,snl_conf_read.domain);
     strcpy(mq_operator,snl_conf_read.operator);
@@ -339,8 +345,8 @@ void write_config_fileUFS()
             
             QL_MQTT_LOG("write pub snl_conf_write.domain is %s", snl_conf_read.domain);
             QL_MQTT_LOG("write pub snl_conf_write.interval is %d", snl_conf_read.interval);
-		       QL_MQTT_LOG("write pub snl_conf_write.interval is %s", snl_conf_read.password);
-           QL_MQTT_LOG("write pub snl_conf_write.operator is %s", snl_conf_read.operator);
+		    QL_MQTT_LOG("write pub snl_conf_write.interval is %s", snl_conf_read.password);
+            QL_MQTT_LOG("write pub snl_conf_write.operator is %s", snl_conf_read.operator);
             strcpy(mq_url,snl_conf_read.domain);
             pdata_int=snl_conf_read.interval;
             strcpy(mq_operator,snl_conf_read.operator);

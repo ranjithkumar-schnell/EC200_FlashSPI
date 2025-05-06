@@ -89,6 +89,13 @@ struct Schnell {
     char domain[100];
 	char password[20];
 	char operator[20];
+	char Latitude[20];
+	char Longitude[20];
+	uint8_t LiveLocation;
+	uint8_t LookupTimeSync;
+	uint8_t DayIndex;
+	uint8_t MonthIndex;
+	uint16_t YearIndex;
 };
 struct Schnell snl_conf,snl_conf_read;
 /*===========================================================================
