@@ -405,31 +405,38 @@ void SpiFlashData_Jsonpacker(const char *data)
     uint8_t crc8 = 0;
     char SPIString[250] = {0}; 
     uint8_t CrcStringLen = 0;
-   
+
+   /*validate the tokenised Raw data by crc calculation */
     strcpy(SPIString, data);
-    char *CrcRest =(char*)SPIString;
-    CrcToken = strtok(CrcRest,"#"); // get the crc8 value from the string
-    CrcStringLen = strlen(CrcToken); // get the length of the string
-    QL_MQTT_LOG(" Crc token string lenght is :%d",strlen(CrcToken));
-    QL_MQTT_LOG("crc tokenised : %s\n", CrcToken); // CONTAINS PACKED Raw SPI DATA
-    crc8 = calculate_crc8(SPIString,CrcStringLen -1); // remove null,comma and crc8 value from the string to calculate crc8 value
-    QL_MQTT_LOG("crc8 value is :%d\n", crc8); // CONTAINS PACKED Raw SPI DATA
+    QL_MQTT_LOG("SPIString: %s\n", SPIString); // CONTAINS PACKED Raw SPI DATA
     
+    char *CrcRest = (char *)SPIString;
+    char *saveptr; // Save pointer for strtok_r
+    char *saveptrCRC;
+    CrcToken = strtok_r(CrcRest, "#", &saveptrCRC); // get the crc8 value from the string
+    CrcStringLen = strlen(CrcToken); // get the length of the string
+    QL_MQTT_LOG(" Crc token string length is :%d", strlen(CrcToken));
+    QL_MQTT_LOG("crc tokenized : %s\n", CrcToken); // CONTAINS PACKED Raw SPI DATA
+    crc8 = calculate_crc8(SPIString, CrcStringLen - 1); // remove null, comma, and crc8 value from the string to calculate crc8 value
+  
+  /* Tokenise raw dataa to value pair for json packing*/
+
     memset(Spi_Json_Value, 0, sizeof(Spi_Json_Value)); // Clear valueString buffer
-    token = strtok(rest, ",#");
-    while (token != NULL) 
-    {
-        strcpy(Spi_Json_Value[i], token);
-       // QL_MQTT_LOG("token[%d]: %s\n", i, token);
-        QL_MQTT_LOG("valueString[%d]: %s\n", i, Spi_Json_Value[i]);
-        i++;
-        token = strtok(NULL, ",#");
-    }
+    token = strtok_r(rest, ",#", &saveptr);
+        while (token != NULL) 
+        {
+            strcpy(Spi_Json_Value[i], token);
+            QL_MQTT_LOG("valueString[%d]: %s\n", i, Spi_Json_Value[i]);
+            i++;
+            token = strtok_r(NULL, ",#", &saveptr);
+        }
+
+    QL_MQTT_LOG("Calculated crc8 value is :%d\n", crc8); // CONTAINS PACKED Raw SPI DATA
     QL_MQTT_LOG("crc8 value is :%s",Spi_Json_Value[E_CRC8]);
     if(atoi(Spi_Json_Value[E_CRC8]) == crc8) // check if the crc8 value is same as the calculated value
     {
         QL_MQTT_LOG("crc8 value is same as calculated value\n");
-            //snprintf(PackedJsonData, sizeof(PackedJsonData), "{\"VD\":1,\"MAXINDEX\":200,\"IMEI\":\"%s\",\"INDEX\":%s,\"LOAD\":%s,\"STINTERVAL\":%s,\"DATE\":%s,\"POTP\":\"%s\",\"COTP\":\"%s\"", imei_no, Spi_Json_Value[E_INDEX], Spi_Json_Value[E_LOAD], Spi_Json_Value[E_STINTERVAL], Spi_Json_Value[E_DATE], Spi_Json_Value[E_POTP], Spi_Json_Value[E_COTP]); // used separately to format the data to int type as per sedem document payload list
+        //snprintf(PackedJsonData, sizeof(PackedJsonData), "{\"VD\":1,\"MAXINDEX\":200,\"IMEI\":\"%s\",\"INDEX\":%s,\"LOAD\":%s,\"STINTERVAL\":%s,\"DATE\":%s,\"POTP\":\"%s\",\"COTP\":\"%s\"", imei_no, Spi_Json_Value[E_INDEX], Spi_Json_Value[E_LOAD], Spi_Json_Value[E_STINTERVAL], Spi_Json_Value[E_DATE], Spi_Json_Value[E_POTP], Spi_Json_Value[E_COTP]); // used separately to format the data to int type as per sedem document payload list
         const char *json_format = "{\"VD\":1,\"MAXINDEX\":200,\"IMEI\":\"%s\",\"INDEX\":%s,\"LOAD\":%s,\"STINTERVAL\":%s,\"DATE\":%s,\"POTP\":\"%s\",\"COTP\":\"%s\"";
         const char *imei_s = imei_no;
         const char *index_s = Spi_Json_Value[E_INDEX];
@@ -440,7 +447,7 @@ void SpiFlashData_Jsonpacker(const char *data)
         const char *cotp_s = Spi_Json_Value[E_COTP];
 
     snprintf(PackedJsonData, sizeof(PackedJsonData), json_format, imei_s, index_s, load_s, stinterval_s, date_s, potp_s, cotp_s); // used separately to format the data to int type as per sedem document payload list
-    for(int j = E_PMAXFREQ1; j <= E_INDEX ;j++)//E_DATE
+    for(int j = E_PMAXFREQ1; j <= E_INDEX ;j++)// till E_INDEX already packed so before e index Pack values to json format from the Received spi data
     {
         if(j== E_INDEX ) snprintf(TempJsonBuff, sizeof(TempJsonBuff), "}");
         else snprintf(TempJsonBuff, sizeof(TempJsonBuff), ",\"%s\":\"%s\"", Spi_Json_key[j], Spi_Json_Value[j]);
