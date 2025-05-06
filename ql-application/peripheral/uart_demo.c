@@ -131,19 +131,19 @@ ql_timer_t cnt_timer = NULL;
 ql_event_t event_uart;
 
 volatile int count = 0;
-char rcv_data_buf[500]={'\0'};
+char rcv_data_buf[250]={'\0'};
 unsigned char tot_rcvd=0;
 char Usart_rcvbf_collect_flag=0;                 // 0 indicates collation not occured
-char imei_no[20]={'\0'};
+char imei_no[20]={"0"};
 unsigned char Periodic_data_req[]   = "$POPI#";
 unsigned char Atribute_data_req[]  = "$FPDS#";	
 unsigned char On_Demand_Pump_On[]   = "$$PON#";	
 unsigned char On_Demand_Pump_Off[]  = "$$POF#";	
 unsigned int d_index=0;
-char current_dt[25]={'\0'};
-char only_dt[10]={'\0'};
-char only_tm[10]={'\0'};
-char dt_time_CRI[25]={'\0'};
+char current_dt[25]={"0"};
+char only_dt[10]={"0"};
+char only_tm[10]={"0"};
+char dt_time_CRI[25]={"0"};
 char version[15]={"59.5"};
 
 char pdata_int = 10;
@@ -208,6 +208,8 @@ void ql_uart_notify_cb(unsigned int ind_type, ql_uart_port_number_e port, unsign
     unsigned int real_size = 0;
     int read_len = 0;
 	int lenght_of_rcvBUffer;
+	int data_Stringsize = 0;
+	data_Stringsize = sizeof(DataString);
      QL_UART_DEMO_LOG("UART port %d receive ind type:0x%x, receive data size:%d", port, ind_type, size);
     switch(ind_type)
     {
@@ -248,6 +250,9 @@ void ql_uart_notify_cb(unsigned int ind_type, ql_uart_port_number_e port, unsign
 						networkStatus =Timesync();
 						get_time();
 						ConvertJsonData();
+						SpiFlashDataUploader(rcv_data_buf,lenght_of_rcvBUffer,DataString,data_Stringsize); // pack data to be sent to flash
+						SpiFlashData_Jsonpacker(DataString);
+						//QL_UART_DEMO_LOG("uart return DataString: %s\n", DataString);   // CONTAINS tOTAL PACKED DATA STRING WITH CRC
 						ql_sdmmc_fs_test(json_data_buf);
 					    ql_sdmmc_fs_NetworkLog(json_data_buf);// create log and append no network/server down log data
 					}

@@ -12,7 +12,7 @@
 
 char valueString[25][15]={'\0'};    // values for the periodic key values of json data cri
 char valConfString[15][15]={'\0'}; //values for the config  key values of json data cri
-char keyString[38][20]= {"PMAXFREQ1","PFREQLSP1","PFREQHSP1","PCNTRMODE1","PRUNST1","PREFFREQ1","POPFREQ1","POPI1","POPV1","POPKW1","PDC1V1","PDC1I1","PDCVOC1","PDKWH1","PTOTKWH1","POPFLW1","POPDWD1","POPTOTWD1","PMAXDCV1","PMAXDCI1","PMAXKW1","PMAXFLW1","PDHR1","PTOTHR1","ASN_11"};
+char keyString[38][25]= {"PMAXFREQ1","PFREQLSP1","PFREQHSP1","PCNTRMODE1","PRUNST1","PREFFREQ1","POPFREQ1","POPI1","POPV1","POPKW1","PDC1V1","PDC1I1","PDCVOC1","PDKWH1","PTOTKWH1","POPFLW1","POPDWD1","POPTOTWD1","PMAXDCV1","PMAXDCI1","PMAXKW1","PMAXFLW1","PDHR1","PTOTHR1","ASN_11"};
 char akeyString[17][20]= {"mt","rv","rf","rp","rms","ih","ps","mif","maf","lv","rov","olc","drc","tmp"};
 char json_data_buf[1000]={'\0'},temp_buf[200];
 
@@ -30,7 +30,7 @@ char heart_buf[600]={'\0'};
 int msgid_ev = 0;
 char cfg_rw[10]={'\0'};
 bool fun_flag=0,write_cmd=0,nw_reg_flag=0,read_cmd=0,conf_f=0,init_f=0,conf_wr_f=0,cred_f;
-char cotp_v[12]={'\0'},potp_v[12]={'\0'},otp_buf[100]={'\0'},ondem_buf[1500]={'\0'},config_buf[1500]={'\0'};
+char cotp_v[12]={"0"},potp_v[12]={"0"},otp_buf[100]={'\0'},ondem_buf[1500]={'\0'},config_buf[1500]={'\0'};
 int numberOFLInes =0;
 
 /* TELEMETRY OUTGOING DATA PACKING AND ENCODE SECTION STARTS HERE*/
@@ -43,9 +43,12 @@ void tokenize_UartData(char* string,int data_len) // "string pointer" argument i
 {
 	 char delims[] = "$/:,{}\"+";  // deliminator for data our's is ",", and "$"
     char *p;
+	char Token[250]={0};
+
+	memcpy(Token, string, data_len); // copy imei no from the received data to the global variable
 	if(data_len > 70)            // recived event of periodic data 180 bytes
 	{
-	p = strtok (string,delims);
+	p = strtok (Token,delims);
   	memset(valueString, 0, sizeof(valueString)); 
   	int i = 0;
   	while (p!= NULL)
@@ -60,7 +63,7 @@ void tokenize_UartData(char* string,int data_len) // "string pointer" argument i
 	}
 	else         // recived config values(<70 bytes) to be updated in attributes
 	{
-      p = strtok (string,delims);
+      p = strtok (Token,delims);
   	 memset(valConfString, 0, sizeof(valConfString)); 
   	 int i = 0;
   	while (p!= NULL)
@@ -85,7 +88,6 @@ void ConvertJsonData()
 	int write_leng;
 	//d_index++;
 	memset(json_data_buf, 0, sizeof(json_data_buf));
-	memset(buffer, 0, sizeof(buffer));
 	if(event_uart.param2 == 1)
 	{
 		d_index++;
@@ -97,12 +99,12 @@ void ConvertJsonData()
 			if(i==25) sprintf(temp_buf,"}");
 			else sprintf(temp_buf,",\"%s\":\"%s\"",keyString[i],valueString[j]);
 			strcat(json_data_buf,temp_buf);
-			QL_MQTT_LOG("\r\n json packed value is:%s\r\n",json_data_buf);
 			memset(temp_buf, 0, sizeof(temp_buf));
 			QL_MQTT_LOG(" TB sending periodic  pub:%s",json_data_buf);
 		}
 	write_leng = strlen(json_data_buf);
 	QL_MQTT_LOG("\r\n string lengh of json data buffer is :%d\r\n",write_leng);
+	QL_MQTT_LOG("\r\n json packed value is:%s\r\n",json_data_buf);
 	}
 
 	if(event_uart.param2 == 2)
