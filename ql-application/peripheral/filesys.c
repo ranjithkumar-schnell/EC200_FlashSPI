@@ -49,7 +49,7 @@ char sd_NnwTBPath_name[25]={'\0'};
 char sd_NnwSDMPath_name[25]={'\0'};
 int NumberOFLinesinFile = 0;
 char DataString[250] = {0}; 
-char PowerCyleIndication = 0;
+int PowerCyleIndication = 1;
 
 
 
@@ -322,6 +322,7 @@ void read_config_fileUFS()
     QL_MQTT_LOG("read pub snl_conf_read.YearIndex is %d", snl_conf_read.YearIndex);
     QL_MQTT_LOG("read pub snl_conf_read.PowerCycleindex is %d", snl_conf_read.PowerCycleindex);
     QL_MQTT_LOG("read pub snl_conf_read.DataDayLogIndex is %d", snl_conf_read.DataDayLogIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.PowerCycleindication is %d", snl_conf_read.PowerCycleindication);
 	strcpy(mq_client_pwd,snl_conf_read.password);
     strcpy(mq_url,snl_conf_read.domain);
     strcpy(mq_operator,snl_conf_read.operator);
@@ -338,7 +339,7 @@ void write_config_fileUFS()
     snl_conf_read.interval=pdata_int;   //all other values are set from RPC go to the section for more info
     // strcpy(snl_conf.domain,"peda1.schnelliot.in:1883");
             fd = ql_fopen(test_file, "wb");
-             err = ql_fwrite(&snl_conf_read, sizeof(struct Schnell) + 1, 1, fd);
+            err = ql_fwrite(&snl_conf_read, sizeof(struct Schnell) + 1, 1, fd);
 			ql_fclose(fd);
             if(err < 0)
             {
@@ -505,7 +506,7 @@ int SpiPageAdressLookup(void)
     QL_MQTT_LOG("currentDay is %d\n", currentDay);
 
     read_config_fileUFS();
-
+    snl_conf_read.PowerCycleindication = PowerCyleIndication;
     if(snl_conf_read.LiveLocation != 1)
     {
         snl_conf_read.LiveLocation = 0;
@@ -544,6 +545,7 @@ int SpiPageAdressLookup(void)
     QL_MQTT_LOG("read pub snl_conf_read.LookupTimeSync is %d\n", snl_conf_read.LookupTimeSync);
     QL_MQTT_LOG("read pub snl_conf_read.PowerCycleindex is %d\n", snl_conf_read.PowerCycleindex);
     QL_MQTT_LOG("read pub snl_conf_read.DataDayLogIndex is %d\n", snl_conf_read.DataDayLogIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.PowerCycleindication is %d\n", snl_conf_read.PowerCycleindication);
 
     if (currentYear > snl_conf_read.YearIndex) 
     {
@@ -553,19 +555,24 @@ int SpiPageAdressLookup(void)
         snl_conf_read.DayIndex = currentDay;
         snl_conf_read.DataDayLogIndex += 1;
         snl_conf_read.PowerCycleindex =0;
-        PowerCyleIndication = 13;
+        PowerCyleIndication = 0;
+        snl_conf_read.PowerCycleindication = PowerCyleIndication;
+        write_config_fileUFS();
     }
 
     else if((currentYear == snl_conf_read.YearIndex) && (currentMonth >= snl_conf_read.MonthIndex))
     {
         if(currentDay == snl_conf_read.DayIndex)
         {
-            if(PowerCyleIndication !=13)
+            if(snl_conf_read.PowerCycleindication == 1)
             {
                 snl_conf_read.PowerCycleindex += 1;
                 QL_MQTT_LOG("Power interrruption occured\n");
                 QL_MQTT_LOG("Power cycle index incremented\n");
                 QL_MQTT_LOG("Power cycle index is %d\n", snl_conf_read.PowerCycleindex);
+                PowerCyleIndication = 0;
+                snl_conf_read.PowerCycleindication = PowerCyleIndication;
+                write_config_fileUFS();
             }
             QL_MQTT_LOG("Already update condition\n");
         }
@@ -575,12 +582,13 @@ int SpiPageAdressLookup(void)
             snl_conf_read.MonthIndex = currentMonth;
             snl_conf_read.DataDayLogIndex += 1;
             snl_conf_read.PowerCycleindex =0;
-            PowerCyleIndication = 13;
+            PowerCyleIndication = 0;
+            snl_conf_read.PowerCycleindication = PowerCyleIndication;
              QL_MQTT_LOG("update day,month index\n");
-
+             write_config_fileUFS();
         }
 
-       
+        QL_MQTT_LOG("Power cycle indication is :%d\n", PowerCyleIndication);
     }
 
     else 
@@ -589,9 +597,9 @@ int SpiPageAdressLookup(void)
         QL_MQTT_LOG("Time sync error\n");
         QL_MQTT_LOG("Date is not valid\n");
         QL_MQTT_LOG("Commence recovery from here\n");
-
+        write_config_fileUFS();
     }
-    write_config_fileUFS();
+   
 
 return snl_conf_read.DataDayLogIndex;
 

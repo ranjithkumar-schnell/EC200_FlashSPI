@@ -97,6 +97,7 @@ struct Schnell {
 	uint8_t LiveLocation;
 	uint8_t LookupTimeSync;
 	uint8_t PowerCycleindex;
+	int PowerCycleindication;
     int DataDayLogIndex;
 };
 struct Schnell snl_conf,snl_conf_read;

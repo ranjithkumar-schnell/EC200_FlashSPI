@@ -645,7 +645,6 @@ static void mqtt_app_thread(void * arg)
 	memset(infosub, 0, sizeof(infosub)); 
 	sprintf(infosub,"iiot-1/standalonesolarpump/%s/info/sub",imei_no);
 
-   
 
 	QL_MQTT_LOG("========== mqtt demo start ==========");
 	QL_MQTT_LOG("wait for network register done");
@@ -668,7 +667,7 @@ static void mqtt_app_thread(void * arg)
 	QL_MQTT_LOG("========== mqtt demo start ==========");
 	QL_MQTT_LOG("wait for network register done");
 
-
+	
 	ret = sim_net_register(nSim, profile_idx);  // checks network registration and returns the status
 		
 		if(ret == 0)
@@ -761,9 +760,11 @@ sedem_Publish_only:
 			QL_MQTT_LOG("mqtt client init failed!!!!");
 			break;
 		}
+
 		DIndex =  SpiPageAdressLookup();
 		QL_MQTT_LOG("DIndex is:%d",DIndex);
-       // read_config_fileUFS();
+		ql_rtos_task_sleep_s(5);
+		
 		strcpy(mqtt_ssl_url, snl_conf_read.domain);
 		strcpy(SedemPassword, snl_conf_read.password);
 		QL_MQTT_LOG("sedem password is set as:%s", mq_client_pwd);
