@@ -64,7 +64,7 @@ unsigned char Periodic_data[]      = "$POPI#";
 unsigned char Atribute_data[]      = "$FPDS#";	
 unsigned char On_Demand_PumpOn[]   = "$$PON#";	
 unsigned char On_Demand_PumpOff[]  = "$$POF#";
-
+unsigned int DIndex = 0; 
 
 // char mq_client_id[60]={"d:860057063288996$standalonesolarpump$28"};
 // char mq_client_uname[60]={"860057063288996$standalonesolarpump$28"};
@@ -650,6 +650,8 @@ static void mqtt_app_thread(void * arg)
 	QL_MQTT_LOG("========== mqtt demo start ==========");
 	QL_MQTT_LOG("wait for network register done");
 
+
+
 	startAgain:
 	ql_rtos_semaphore_create(&mqtt_semp, 0);
 	ql_rtos_task_sleep_s(10);
@@ -759,8 +761,9 @@ sedem_Publish_only:
 			QL_MQTT_LOG("mqtt client init failed!!!!");
 			break;
 		}
-		
-        read_config_fileUFS();
+		DIndex =  SpiPageAdressLookup();
+		QL_MQTT_LOG("DIndex is:%d",DIndex);
+       // read_config_fileUFS();
 		strcpy(mqtt_ssl_url, snl_conf_read.domain);
 		strcpy(SedemPassword, snl_conf_read.password);
 		QL_MQTT_LOG("sedem password is set as:%s", mq_client_pwd);

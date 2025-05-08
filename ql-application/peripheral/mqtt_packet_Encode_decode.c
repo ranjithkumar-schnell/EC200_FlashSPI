@@ -281,7 +281,7 @@ int jsonextract(char *data)
 			
 			QL_MQTT_LOG("Time sync set from rpc is:%s \n",vv); 
 			snl_conf_read.LookupTimeSync = atoi(vv);
-			if(snl_conf_read.LiveLocation == 1)
+			if(snl_conf_read.LookupTimeSync == 1)
 			{
 				snl_conf_read.DayIndex = tm.tm_mday;
 				snl_conf_read.MonthIndex = tm.tm_mon;
@@ -292,6 +292,7 @@ int jsonextract(char *data)
 				QL_MQTT_LOG("Month is set as:%d\n",snl_conf_read.MonthIndex);
 				QL_MQTT_LOG("Year is set as:%d\n",snl_conf_read.YearIndex);
 			}
+
 
 			write_config_fileUFS();
 			i++;

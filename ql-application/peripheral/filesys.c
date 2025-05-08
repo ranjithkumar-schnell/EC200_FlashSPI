@@ -49,7 +49,7 @@ char sd_NnwTBPath_name[25]={'\0'};
 char sd_NnwSDMPath_name[25]={'\0'};
 int NumberOFLinesinFile = 0;
 char DataString[250] = {0}; 
-
+char PowerCyleIndication = 0;
 
 
 
@@ -292,7 +292,7 @@ void read_logged_files_toRetry(char* sd_path_name_retry)
 
 void read_config_fileUFS()
 {
-      int fd,size_f,err = 0 ;
+    int fd,size_f,err = 0 ;
     fd = ql_fopen(test_file, "rb");
     size_f=ql_fsize(fd);
     QL_MQTT_LOG("cred.txt size is =%d",size_f);
@@ -317,6 +317,11 @@ void read_config_fileUFS()
     QL_MQTT_LOG("read pub snl_conf_read.MonthIndex is %d", snl_conf_read.MonthIndex);
     QL_MQTT_LOG("read pub snl_conf_read.YearIndex is %d", snl_conf_read.YearIndex);
     QL_MQTT_LOG("read pub snl_conf_read.LookupTimeSync is %d", snl_conf_read.LookupTimeSync);
+    QL_MQTT_LOG("read pub snl_conf_read.DayIndex is %d", snl_conf_read.DayIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.MonthIndex is %d", snl_conf_read.MonthIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.YearIndex is %d", snl_conf_read.YearIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.PowerCycleindex is %d", snl_conf_read.PowerCycleindex);
+    QL_MQTT_LOG("read pub snl_conf_read.DataDayLogIndex is %d", snl_conf_read.DataDayLogIndex);
 	strcpy(mq_client_pwd,snl_conf_read.password);
     strcpy(mq_url,snl_conf_read.domain);
     strcpy(mq_operator,snl_conf_read.operator);
@@ -347,6 +352,18 @@ void write_config_fileUFS()
             QL_MQTT_LOG("write pub snl_conf_write.interval is %d", snl_conf_read.interval);
 		    QL_MQTT_LOG("write pub snl_conf_write.interval is %s", snl_conf_read.password);
             QL_MQTT_LOG("write pub snl_conf_write.operator is %s", snl_conf_read.operator);
+            QL_MQTT_LOG("read pub snl_conf_read.LiveLocation is %d", snl_conf_read.LiveLocation);
+            QL_MQTT_LOG("read pub snl_conf_read.Latitude is %s", snl_conf_read.Latitude);
+            QL_MQTT_LOG("read pub snl_conf_read.Longitude is %s", snl_conf_read.Longitude);
+            QL_MQTT_LOG("read pub snl_conf_read.DayIndex is %d", snl_conf_read.DayIndex);
+            QL_MQTT_LOG("read pub snl_conf_read.MonthIndex is %d", snl_conf_read.MonthIndex);
+            QL_MQTT_LOG("read pub snl_conf_read.YearIndex is %d", snl_conf_read.YearIndex);
+            QL_MQTT_LOG("read pub snl_conf_read.LookupTimeSync is %d", snl_conf_read.LookupTimeSync);
+            QL_MQTT_LOG("read pub snl_conf_read.DayIndex is %d", snl_conf_read.DayIndex);
+            QL_MQTT_LOG("read pub snl_conf_read.MonthIndex is %d", snl_conf_read.MonthIndex);
+            QL_MQTT_LOG("read pub snl_conf_read.YearIndex is %d", snl_conf_read.YearIndex);
+            QL_MQTT_LOG("read pub snl_conf_read.PowerCycleindex is %d", snl_conf_read.PowerCycleindex);
+            QL_MQTT_LOG("read pub snl_conf_read.DataDayLogIndex is %d", snl_conf_read.DataDayLogIndex);
             strcpy(mq_url,snl_conf_read.domain);
             pdata_int=snl_conf_read.interval;
             strcpy(mq_operator,snl_conf_read.operator);
@@ -396,7 +413,7 @@ void SpiFlashDataUploader(char *data, int data_size,char *DataString,int data_St
  
 }
 
-// caution segmentation fualt occured after addition of crc section which has been cleared after basic logics recheck this function
+// caution segmentation fualt occured after addition of crc section which has been cleared, after basic logics recheck this function
 // this function is used to unpack the data from the packed data string and convert it to json format for sending to thingsboard/Sedem server
 void SpiFlashData_Jsonpacker(const char *data)
  {
@@ -468,7 +485,115 @@ void SpiFlashData_Jsonpacker(const char *data)
         QL_MQTT_LOG("crc8 value is not same as calculated value\n");
     }
 
+}
 
+int SpiPageAdressLookup(void)
+{
+    QL_MQTT_LOG("SpiPageAdressLookup\n");
+    // Implement the function logic here
+    
+
+    int currentYear = 0;
+    int currentMonth = 0;
+    int currentDay = 0;
+   
+    currentYear = tm.tm_year; 
+    currentMonth = tm.tm_mon; 
+    currentDay = tm.tm_mday; 
+    QL_MQTT_LOG("currentYear is %d\n", currentYear);
+    QL_MQTT_LOG("currentMonth is %d\n", currentMonth);
+    QL_MQTT_LOG("currentDay is %d\n", currentDay);
+
+    read_config_fileUFS();
+
+    if(snl_conf_read.LiveLocation != 1)
+    {
+        snl_conf_read.LiveLocation = 0;
+        strcpy(snl_conf_read.Latitude,"0.0");
+        strcpy(snl_conf_read.Longitude,"0.0");
+        QL_MQTT_LOG("lat  set from rpc is:%s\n",snl_conf_read.Latitude);
+        QL_MQTT_LOG("long set from rpc is:%s \n",snl_conf_read.Longitude);
+        
+    }
+
+    if(snl_conf_read.LookupTimeSync != 1)
+    {
+        snl_conf_read.LookupTimeSync = 1;
+        snl_conf_read.DayIndex = 1;
+        snl_conf_read.MonthIndex = 1;
+        snl_conf_read.YearIndex = 2025;	
+        
+
+        QL_MQTT_LOG("Day is set as:%d\n",snl_conf_read.DayIndex);
+        QL_MQTT_LOG("Month is set as:%d\n",snl_conf_read.MonthIndex);
+        QL_MQTT_LOG("Year is set as:%d\n",snl_conf_read.YearIndex);
+        
+    }
+
+    //debug info
+    QL_MQTT_LOG("snl_conf_read.Interval is %d\n", snl_conf_read.interval);
+    QL_MQTT_LOG("snl_conf_read.domain is %s\n", snl_conf_read.domain);
+    QL_MQTT_LOG("snl_conf_read.password is %s\n", snl_conf_read.password);
+    QL_MQTT_LOG("snl_conf_read.operator is %s\n", snl_conf_read.operator);
+    QL_MQTT_LOG("snl_conf_read.Latitude is %s\n", snl_conf_read.Latitude);
+    QL_MQTT_LOG("snl_conf_read.Longitude is %s\n", snl_conf_read.Longitude);
+    QL_MQTT_LOG("read pub snl_conf_read.LiveLocation is %d\n", snl_conf_read.LiveLocation);
+    QL_MQTT_LOG("read pub snl_conf_read.DayIndex is %d\n", snl_conf_read.DayIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.MonthIndex is %d\n", snl_conf_read.MonthIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.YearIndex is %d\n", snl_conf_read.YearIndex);
+    QL_MQTT_LOG("read pub snl_conf_read.LookupTimeSync is %d\n", snl_conf_read.LookupTimeSync);
+    QL_MQTT_LOG("read pub snl_conf_read.PowerCycleindex is %d\n", snl_conf_read.PowerCycleindex);
+    QL_MQTT_LOG("read pub snl_conf_read.DataDayLogIndex is %d\n", snl_conf_read.DataDayLogIndex);
+
+    if (currentYear > snl_conf_read.YearIndex) 
+    {
+        QL_MQTT_LOG("Year, month, and days updated\n");
+        snl_conf_read.YearIndex = currentYear;
+        snl_conf_read.MonthIndex = currentMonth;
+        snl_conf_read.DayIndex = currentDay;
+        snl_conf_read.DataDayLogIndex += 1;
+        snl_conf_read.PowerCycleindex =0;
+        PowerCyleIndication = 13;
+    }
+
+    else if((currentYear == snl_conf_read.YearIndex) && (currentMonth >= snl_conf_read.MonthIndex))
+    {
+        if(currentDay == snl_conf_read.DayIndex)
+        {
+            if(PowerCyleIndication !=13)
+            {
+                snl_conf_read.PowerCycleindex += 1;
+                QL_MQTT_LOG("Power interrruption occured\n");
+                QL_MQTT_LOG("Power cycle index incremented\n");
+                QL_MQTT_LOG("Power cycle index is %d\n", snl_conf_read.PowerCycleindex);
+            }
+            QL_MQTT_LOG("Already update condition\n");
+        }
+        else 
+        {
+            snl_conf_read.DayIndex = currentDay;
+            snl_conf_read.MonthIndex = currentMonth;
+            snl_conf_read.DataDayLogIndex += 1;
+            snl_conf_read.PowerCycleindex =0;
+            PowerCyleIndication = 13;
+             QL_MQTT_LOG("update day,month index\n");
+
+        }
+
+       
+    }
+
+    else 
+    {
+        snl_conf_read.PowerCycleindex =0;
+        QL_MQTT_LOG("Time sync error\n");
+        QL_MQTT_LOG("Date is not valid\n");
+        QL_MQTT_LOG("Commence recovery from here\n");
+
+    }
+    write_config_fileUFS();
+
+return snl_conf_read.DataDayLogIndex;
 
 }
 

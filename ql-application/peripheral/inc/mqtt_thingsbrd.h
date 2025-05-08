@@ -165,6 +165,7 @@ void publish_lost_data(char* pubData);
 void publish_missed_Packets(char* pubDatas,int f);
 int Connected_server(void);	
 void airplane_mode(void);
+int SpiPageAdressLookup(void);
 
 #ifdef __cplusplus
 		}/*"C" */

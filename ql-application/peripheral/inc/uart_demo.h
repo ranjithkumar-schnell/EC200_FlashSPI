@@ -91,11 +91,13 @@ struct Schnell {
 	char operator[20];
 	char Latitude[20];
 	char Longitude[20];
+    int DayIndex;
+	int MonthIndex;
+	int YearIndex;
 	uint8_t LiveLocation;
 	uint8_t LookupTimeSync;
-	uint8_t DayIndex;
-	uint8_t MonthIndex;
-	uint16_t YearIndex;
+	uint8_t PowerCycleindex;
+    int DataDayLogIndex;
 };
 struct Schnell snl_conf,snl_conf_read;
 /*===========================================================================
